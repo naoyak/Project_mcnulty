@@ -1,3 +1,7 @@
+html {
+    font-family: GillSans, Calibri, Trebuchet, sans-serif;
+  }
+
 nav .nav-wrapper {
     background-color: #00bbd3;
 }
@@ -54,7 +58,7 @@ nav .nav-wrapper {
 
 span#span {
     position:absolute;
-    z-index: 100000;
+    z-index: 100;
     bottom:-4rem;
     width:150px;
     left:-2.6rem;
@@ -100,14 +104,28 @@ span#span {
 }
 
 #bar_chart svg {
-    margin-left:37%;
+    margin-left:27%;
     margin-top:4rem;
     fill: #4caf50;
 }
 #bar_chart span {
     position:absolute;
-    margin-left: 30%;
+    margin-left: 46%;
     font-size:2rem;
-    color:gray;
-    margin-top:4.3rem;
+    color:#00bbd3;
+    margin-top:2rem;
+}
+
+#modal-btn {
+    position:relative !important;
+    margin-right:37% !important;
+    width:25% !important;
+    margin-left:37% !important;
+    top:6rem !important;
+    background-color:#00bbd3 !important;
+    margin-bottom:10rem !important;
+}
+
+#modal-btn-zubat {
+    background-color:white !important;
 }

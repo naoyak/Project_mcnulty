@@ -1,4 +1,12 @@
-
+<style>
+#modal-btn .modal-trigger .btn {
+    position:relative;
+    margin-right:45%;
+    width:10%;
+    margin-left:45%;
+    top:6rem;
+}
+</style>
 
 <div id="bar_chart"><span class="roi-label">ROI</span></div>
 <div class="sliders">
@@ -26,11 +34,60 @@
         <option value="other">Other</option>
     </select>
     <label>Loan Purpose</label>
-</div>`
+</div>
+
+<!-- Modal Trigger -->
+<a id="modal-btn" class="modal-trigger waves-effect waves-light btn" href="#modal1">See Loan Information</a>
+<!-- Modal Trigger -->
+<a id="modal-btn-zubat" class="modal-trigger waves-effect waves-light btn" href="#modal-zubat">Z</a>
+
+<!-- Modal Structure -->
+<div id="modal1" class="modal modal-fixed-footer">
+    <div class="modal-content">
+        <h4 class="modal-header"></h4>
+        <p class='modal-loan-purpose'><strong>Loan Purpose:</strong> <span class='modal-purpose'></span></p>
+        <p class='modal-loan-grade'><strong>Loan Grade: </strong><span class="modal-grade"></span></p>
+        <!-- <p class="modal-loan-desc"><strong>Loan Description: </strong><span class='modal-desc'></span><p> -->
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat ">Continue</a>
+    </div>
+</div>
+
+<!-- Modal Structure -->
+<div id="modal-zubat" class="modal modal-fixed-footer">
+    <div class="modal-content">
+        <h2>Suddenly, ZUBAT</h2>
+        <img src="static/zubat.png"/>
+        <img src="static/zubat.png"/>
+        <!-- <p class="modal-loan-desc"><strong>Loan Description: </strong><span class='modal-desc'></span><p> -->
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat ">ZUBAT</a>
+    </div>
+</div>
 
 
 <!-- JAVASCRIPT -->
 <script>
+    var title = 'No Loans Found';
+    var actual_loan_purpose = "NA";
+    var loan_grade = 'NA';
+    var loan_desc = 'NA';
+
+    $(document).ready(function(){
+        // the "href" attribute of .modal-trigger must specify the modal ID that wants to be triggered
+        $('.modal-trigger').leanModal();
+
+    });
+
+    $('#modal-btn').click(function(e) {
+        $('.modal-header').html(title);
+        $('.modal-purpose').html(actual_loan_purpose);
+        $('.modal-grade').html(loan_grade);
+        // $('.modal-desc').html(loan_desc);
+    });
+
     $(document).ready(function() {
         $('select').material_select();
     });
@@ -42,32 +99,37 @@
     var loan_amount = 10000;
     var num_loans = 1;
     var risk = 50;
-    var loan_pred = 10.0;
+    var loan_pred = 5;
 
     // Draw the d3 thing~
-    var chart = d3.select("#bar_chart")
-                   .append("svg:svg")
-                   .attr("width", 600)
-                   .attr("height", 100);
+    var margin = {top: 20, right: 30, bottom: 40, left: 30},
+                    width = 500 - margin.left - margin.right,
+                    height = 100 - margin.top - margin.bottom;
 
-     var chance_scale = d3.scale.linear()
-                                .domain([0, 100])
-                                .range([0, 600]);
+    var x = d3.scale.linear()
+            .range([0,width])
+            .domain([-30,30]);
 
-     var bar = chart.append("g")
-                    .attr("class", "bar")
+    var svg = d3.select('#bar_chart').append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
 
-       bar.append("svg:rect")
-          .attr("id", "chancebar")
-          .attr("class", "bar")
-          .attr("width", chance_scale(loan_pred))
-          .attr("height", 50);
+    var bar = svg.append("g")
+                .attr("class", "bar")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+   bar.append("svg:rect")
+      .attr("id", "chancebar")
+      .attr("class", "bar")
+      .attr("x",x(0))
+      .attr("width", x(loan_pred) - x(0))
+      .attr("height", 50);
 
      bar.append("text")
         .attr("id", "percent_text")
         .attr("dy", ".75em")
         .attr("y", 15)
-        .attr("x", chance_scale(loan_pred-5))
+        .attr("x", x(0)+30)
         .attr("text-anchor", "middle")
         .attr("fill", "white")
         .attr("font-size", 20)
@@ -90,33 +152,51 @@
             async: true,
             data: data,
             success: function (data) {
-                console.log(data.length);
                 // data is returned as a list of json objects
                 // to access an element do data[i]['<field_name>']
                 // console.log(data[0]['profit_loss']);
                 // console.log(data.length)
                 var avg_roi = 2;
-                var data = data['loan_data']
+                var data = data['loan_data'];
                 if (data.length > 0){
+                    title = data[0]['title'];
+                    actual_loan_purpose = data[0]['purpose'];
+                    loan_grade = data[0]['grade'];
+                    // loan_desc = data[0]['desc'];
+
                     for (i = 0; i < data.length; i++) {
                         avg_roi += 100 * data[i]['profit_loss']/data[i]['funded_amount'];
                     }
                     avg_roi = avg_roi/data.length;
-                    console.log("avg roi: ",avg_roi);
-                    // var chance = 100 * data[i]["profit_loss"]/parseFloat(data[i]['funded_amount']);
-                    // console.log(chance);
-                    d3.select("#chancebar")
-                    .attr("width", chance_scale(avg_roi*5));
-                    d3.select("#percent_text")
-                    .attr("x", chance_scale(avg_roi*5-5))
-                    .text(avg_roi.toFixed(1) + "%");
+                    if (avg_roi > 0){
+                        d3.select("#chancebar")
+                        .attr("x", x(0))
+                        .attr("width", x((avg_roi))-x(0))
+                        .attr("fill",'#4caf50');
+                        d3.select("#percent_text")
+                        .attr("x", x(0)+30)
+                        .attr("fill","black")
+                        .text(avg_roi.toFixed(1) + "%");
+                    } else {
+                        d3.select("#chancebar")
+                        .attr('x',x(avg_roi))
+                        .attr("width",x(0)-x(avg_roi))
+                        .attr('fill','red');
+                        d3.select("#percent_text")
+                        .attr("x",x(0)+30)
+                        .attr("fill","red")
+                        .text(avg_roi.toFixed(1) + "%");
+                    }
                 }
                 else {
                     d3.select("#chancebar")
-                    .attr("width", chance_scale(avg_roi*5));
+                    .attr('x',x(0))
+                    .attr("width",x(0))
+                    .attr('fill','white');
                     d3.select("#percent_text")
-                    .attr("x", chance_scale(avg_roi*5-5))
-                    .text(avg_roi.toFixed(1) + "%");
+                    .attr("x",x(0)+30)
+                    .attr("fill","black")
+                    .text(0 + "%");
                 }
             },
                 error: function (result) {
@@ -149,29 +229,6 @@
         })
     });
 
-    // var num_loans_slider = document.getElementById('num-loans');
-    // var num_loans_value = document.getElementById('num_loans');
-    // noUiSlider.create(num_loans_slider, {
-    //     start: 1,
-    //     connect:'lower',
-    //     orientation:'vertical',
-    //     direction:'rtl',
-    //     tooltips: wNumb({ decimals: 1 }),
-    //     step: 1,
-    //     pips: {
-    //         mode: 'values',
-	// 	    values: [1,2,3,4,5,6,7,8,9,10],
-	// 	    density: 8
-	//     },
-    //     range: {
-    //     'min': 1,
-    //     'max': 10
-    //     },
-    //     format: wNumb({
-    //     decimals: 0
-    //     })
-    // });
-
     var risk_slider = document.getElementById('risk-tolerance');
     var risk_value = document.getElementById('risk');
     noUiSlider.create(risk_slider, {
@@ -195,7 +252,6 @@
     });
 
     var amnt_handle = loan_amnt_slider.getElementsByClassName('noUi-handle');
-    // var num_loans_handle = num_loans_slider.getElementsByClassName('noUi-handle');
     var risk_handle = risk_slider.getElementsByClassName('noUi-handle');
 
     // Controls what happens when sliders are used
@@ -203,9 +259,7 @@
         loan_amount = parseFloat(values[amnt_handle]);
         getAndDrawChance(loan_amount,risk,purpose);
     });
-    // num_loans_slider.noUiSlider.on('update',function(values, num_loans_handle){
-    //     num_loans = parseFloat(values[num_loans_handle]);
-    // });
+
     risk_slider.noUiSlider.on('update',function(values, risk_handle){
         risk = (parseFloat(values[risk_handle])/100);
         getAndDrawChance(loan_amount,risk,purpose);
